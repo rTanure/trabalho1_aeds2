@@ -45,13 +45,22 @@ void add_employee(FILE *file, Employee *employee);
 // Salva um novo valor em uma linha do arquivo
 void update_employee(FILE *file, Employee *employee, int index);
 
+// Adiciona [count] funcionarios com ids aleatorios na base de dados
+void add_random_employees(FILE *file, int count);
+
 // Le o funcionario na posição atual do cursor
 Employee *read_employee(FILE *arq);
+
+// Verifica se a base está ordenada
+int verify_sorted_employees(FILE *file);
+
 
 // Retorna o tamanho do registro da struct Employee
 size_t get_employee_size();
 // Retorna quantos funcionários estão cadastrados
 int get_employees_count(FILE *file);
+
+void sort_employees(FILE *file);
 
 // Retorna um funcionario pelo seu index na tabela
 Employee *get_employee_by_index(FILE *file, int index);

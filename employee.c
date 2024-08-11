@@ -1,8 +1,13 @@
-#include "employee.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <tgmath.h>
+
+#include "employee.h"
+#include "utils.h"
+
+#include "classificacaoInterna.h"
+#include "intercalacaoBasica.h"
 
 Employee *employee(
     int id,
@@ -39,6 +44,7 @@ Employee *employee(
 };
 
 void print_employee(Employee *employee) {
+
     if(employee == NULL) {
         printf("Funcionario nulo passado!\n");
         return;
@@ -68,8 +74,8 @@ void add_employee(FILE *file, Employee *employee) {
 
 void save_employee(FILE *file, Employee *employee) {
     fwrite(&employee->id, sizeof(int), 1, file);
-    fwrite(employee->name, sizeof(char), sizeof(employee->name), file);
-    fwrite(employee->role, sizeof(char), sizeof(employee->role), file);
+    fwrite(employee->name, sizeof(char), 64, file);
+    fwrite(employee->role, sizeof(char), 20, file);
     fwrite(&employee->salary, sizeof(double), 1, file);
     fwrite(&employee->hire_date, sizeof(time_t), 1, file);
     fwrite(&employee->resignation_date, sizeof(time_t), 1, file);
@@ -80,11 +86,52 @@ void save_employee(FILE *file, Employee *employee) {
     fwrite(&employee->state, sizeof(char), 1, file);
 };
 
+void add_random_employees(FILE *file, int count) {
+    int id_list[count];
+    for (int i = get_employees_count(file); i < count; i++) {
+        id_list[i] = i + 1;
+    }
+
+    shuffle(id_list, count);
+
+    // fseek(file, 0, SEEK_END);
+    Employee *new_employee;
+    for(int i = 0; i < count; i++){
+        new_employee = employee(id_list[i],"Carlos Alberto","repositor",2000,time(NULL),0,6,18,12,13,'o');
+        add_employee(file, new_employee);
+    }
+    free(new_employee);
+};
+
+int verify_sorted_employees(FILE *file) {
+    rewind(file);
+    Employee *employee;
+    int last;
+
+    for(int i = 0; i < get_employees_count(file); i++) {
+        fseek(file, get_employee_size()*i, SEEK_SET);
+        employee = read_employee(file);
+        if(employee -> id < last){
+            free(employee);
+            return 0;
+        }
+
+        last = employee -> id;
+    }
+
+
+    free(employee);
+    return 1;
+}
+
 Employee *read_employee(FILE *file) {
     Employee *employee = malloc(sizeof(Employee));
+
+    // if (0 >= fread(&employee->id, sizeof(int), 1, file)) { free(employee);return NULL;}
+
     fread(&employee->id, sizeof(int), 1, file);
-    fread(employee->name, sizeof(char), sizeof(employee->name), file);
-    fread(employee->role, sizeof(char), sizeof(employee->role), file);
+    fread(employee->name, sizeof(char), 64, file);
+    fread(employee->role, sizeof(char), 20, file);
     fread(&employee->salary, sizeof(double), 1, file);
     fread(&employee->hire_date, sizeof(time_t), 1, file);
     fread(&employee->resignation_date, sizeof(time_t), 1, file);
@@ -124,12 +171,21 @@ int get_employees_count(FILE *file) {
 }
 
 Employee *get_employee_by_index(FILE *file, int index) {
-
-    int offset = get_employee_size() * index;
-
-    fseek(file, offset, SEEK_SET);
-    return read_employee(file);
+    rewind(file);
+    Employee *employee;
+    employee = read_employee(file);
+    // fseek(file, (get_employee_size() * index), SEEK_SET);
+    return employee;
 };
+
+void sort_employees(FILE *file)
+{
+    printf("> Realizando a classificacao interna.\n");
+    int n_partitions = classificacao_interna(file, 200);
+    printf("> Realizando a intercalacao basica.\n");
+    intercalacao_basica(file, n_partitions);
+    printf("> Base funcionarios ordenada\n");
+}
 
 void update_employee(FILE *file, Employee *employee, int index) {
     rewind(file);

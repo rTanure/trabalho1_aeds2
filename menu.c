@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <conio.h>
 #include <time.h>
+#include "classificacaoInterna.h"
+#include "intercalacaoBasica.h"
 #include <string.h>
 
 #include "employee.h"
@@ -25,7 +27,6 @@ void add_employee_menu(FILE *file) {
 
     // Captura os dados do novo funcionario
     clear_screen();
-
     printf("====== ADICIONAR NOVO FUNCIONARIO ======\n");
     printf("Nome: ");
     scanf(" %[^\n]s", employee->name);
@@ -74,14 +75,30 @@ void add_employee_menu(FILE *file) {
     free(employee);
 }
 
+void add_random_employee_menu(FILE *file) {
+    clear_screen();
+    int count;
+    printf("Informe a quantidade de funcionários: ");
+    scanf("%d", &count);
+    add_random_employees(file, count);
+    wait_for_enter();
+}
+
+
 void admin_menu(FILE *file) {
     unsigned int selection = 0;
 
     do {
         system("cls");
         printf("======= PAINEL ADMIN =======\n");
-        printf("1. Adicionar funcionário.\n");
-        printf("2. Quantidade de funcionarios\n");
+        printf("1. Adicionar funcionario.\n");
+        printf("2. Ver a quantidade de funcionarios.\n");
+        printf("3. Adicionar varios funcionarios aleatorios.\n");
+        printf("4. Verificar se a base funcionarios esta ordenada.\n");
+        printf("5. Ordenar por classificacao interna.\n");
+        printf("6. Imprimir funcionario em uma posicao.\n");
+        printf("7. imprimir lista de funcionarios.\n");
+
         printf("\n0. Voltar\n");
         printf("\n>>> Opcao selecionada: ");
         scanf("%d", &selection);
@@ -93,6 +110,44 @@ void admin_menu(FILE *file) {
             case 2:
                 clear_screen();
                 printf("Quantidade de funcioarios: %d\n", get_employees_count(file));
+                wait_for_enter();
+                break;
+            case 3:
+                add_random_employee_menu(file);
+                break;
+            case 4:
+                clear_screen();
+                printf("base ordenada: %d", verify_sorted_employees(file));
+                wait_for_enter();
+                break;
+            case 5:
+                clear_screen();
+                sort_employees(file);
+                wait_for_enter();
+                break;
+            case 6:
+                clear_screen();
+                int id;
+                Employee *employee;
+
+                printf("> Digite o id do funcionario: ");
+                scanf("%d", &id);
+                employee = get_employee_by_index(file, id);
+
+                print_employee(employee);
+                wait_for_enter();
+                free(employee);
+                break;
+            case 7:
+                Employee *f;
+                rewind(file);
+                for(int i = 0; i < get_employees_count(file); i++) {
+                    fseek(file, get_employee_size() * i, SEEK_SET);
+                    f = read_employee(file);
+
+                    print_employee(f);
+                    printf("\n==============\n");
+                }
                 wait_for_enter();
                 break;
             default:
@@ -126,4 +181,6 @@ void menu(FILE *file) {
 
         }
     } while(selection != 0);
+
+    fclose(file);
 }

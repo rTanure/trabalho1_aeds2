@@ -10,4 +10,10 @@ add_executable(
         employee.h
         menu.c
         menu.h
+        utils.c
+        utils.h
+        intercalacaoBasica.c
+        intercalacaoBasica.h
+        classificacaoInterna.h
+        classificacaoInterna.c
 )
