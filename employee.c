@@ -64,7 +64,13 @@ void print_employee(Employee *employee) {
     printf("Saida:           %f\n", employee->exit_time);
     printf("Inicio almoco:   %f\n", employee->lunch_start);
     printf("Fim almoco:      %f\n", employee->lunch_end);
-    printf("State:           %c\n", employee->state);
+
+    if(employee->state == 0) printf("State:           em casa\n");
+    if(employee->state == 1) printf("State:           turno da manha\n");
+    if(employee->state == 2) printf("State:           almoco\n");
+    if(employee->state == 3) printf("State:           turno da tarde\n");
+
+
 };
 
 void add_employee(FILE *file, Employee *employee) {
@@ -97,7 +103,7 @@ void add_random_employees(FILE *file, int count) {
     // fseek(file, 0, SEEK_END);
     Employee *new_employee;
     for(int i = 0; i < count; i++){
-        new_employee = employee(id_list[i],"Carlos Alberto","repositor",2000,time(NULL),0,6,18,12,13,'o');
+        new_employee = employee(id_list[i],"Carlos Alberto","repositor",2000,time(NULL),0,6,18,12,13,0);
         add_employee(file, new_employee);
     }
     free(new_employee);
@@ -178,13 +184,9 @@ Employee *get_employee_by_index(FILE *file, int index) {
     return employee;
 };
 
-void sort_employees(FILE *file)
-{
-    printf("> Realizando a classificacao interna.\n");
-    int n_partitions = classificacao_interna(file, 200);
-    printf("> Realizando a intercalacao basica.\n");
-    intercalacao_basica(file, n_partitions);
-    printf("> Base funcionarios ordenada\n");
+void sort_employees(FILE *file) {
+    int n = classificacao_interna(file, 200);
+    intercalacao_basica(file, n);
 }
 
 void update_employee(FILE *file, Employee *employee, int index) {
@@ -192,4 +194,32 @@ void update_employee(FILE *file, Employee *employee, int index) {
     long offset = index * get_employee_size();
     fseek(file, offset, SEEK_SET);
     save_employee(file, employee);
+}
+
+Employee *get_employee_by_id(FILE *file, int id)
+{
+    Employee *f = malloc(sizeof(Employee));
+    rewind(file);
+
+    for(int i = 0; i < get_employees_count(file); i++) {
+        fseek(file, get_employee_size() * i, SEEK_SET);
+        f = read_employee(file);
+        if(f->id == id) return f;
+    }
+    free(f);
+    return NULL;
+}
+
+int get_employee_index(FILE *file, int id)
+{
+    Employee *f;
+
+    for(int i = 0; i < get_employees_count(file); i++)
+    {
+        fseek(file, get_employee_size() * i, SEEK_SET);
+        f = read_employee(file);
+        if(f->id == id) return i;
+    }
+
+    return -1;
 }

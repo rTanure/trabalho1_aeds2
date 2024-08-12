@@ -16,4 +16,6 @@ add_executable(
         intercalacaoBasica.h
         classificacaoInterna.h
         classificacaoInterna.c
+        pontos.c
+        pontos.h
 )

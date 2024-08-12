@@ -60,8 +60,16 @@ size_t get_employee_size();
 // Retorna quantos funcionários estão cadastrados
 int get_employees_count(FILE *file);
 
+// Ordena os empregados pelo id
 void sort_employees(FILE *file);
 
 // Retorna um funcionario pelo seu index na tabela
 Employee *get_employee_by_index(FILE *file, int index);
+// Retorna um funcionario pelo id
+Employee *get_employee_by_id(FILE *file, int id);
+// Retorna o index de um funcionario
+int get_employee_index(FILE *file, int id);
+
+
+
 #endif //EMPLOYEE_H

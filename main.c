@@ -6,35 +6,24 @@
 #include "menu.h"
 
 int main(void) {
-    FILE *file;
+    FILE *file_employees, *file_pontos;
 
-    file = fopen("employees.dat", "w+b");
+    // file = fopen("part_emp_3.dat", "r");
+    file_employees = fopen("employees.dat", "w+b");
+    file_pontos = fopen("pontos.dat", "w+b");
 
-    if(file == NULL) {
+
+    if(file_employees == NULL || file_pontos == NULL) {
         printf("Erro ao abrir o file\n");
         exit(1);
     }
-    
-    menu(file);
 
-    int id_list[1000];
-    for (int i = 0; i < 1000; i++) {
-        id_list[i] = i + 1;
-    }
+    // rewind(file);
+    // Employee *e = read_employee(file);
+    // print_employee(e);
+    menu(file_employees, file_pontos);
 
-    Employee *e;
-    for (int i = 0; i < 1000; i++)
-    {
-        e = employee(id_list[i], "a", "a", 1, 0, 0, 1, 1, 1, 1, 'o');
-        add_employee(file, e);
-        rewind(file);
-    }
 
-    rewind(file);
-    // fseek(file, get_employee_size() * 500, SEEK_SET);
-    e = read_employee(file);
-    print_employee(e);
-
-    free(e);
+    //free(e);
     return 0;
 }

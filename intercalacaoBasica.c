@@ -1,106 +1,64 @@
 #include "employee.h"
 #include "intercalacaoBasica.h"
+
+#include <math.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
+#include <limits.h>
 
-void intercalacao_basica(FILE *file, int num_p){
-
-    // Define a struct que contem o maior objeto e o
-    typedef struct vetor{
-        Employee *employee;
+void intercalacao_basica(FILE *out, int num_p) {
+    typedef struct vetor {
+        Employee *fun;
         FILE *f;
-    }TVet;
+    } TVet;
 
-    int fim = 0; //variavel que controla fim do procedimento
-    int particao = 0;
-    char *nome[20];
-
-
-    //cria vetor de particoes
     TVet v[num_p];
+    char nome[20];
+    int fim = 0; // Controle do fim do procedimento
 
-    //abre arquivos das particoes, colocando variavel de arquivo no campo f do vetor
-    //e primeiro funcionario do arquivo no campo func do vetor
-    for (int i=0; i < num_p; i++) {
-        // O que essa função faz?
-        sprintf(nome, "partition%i.dat", particao);
-
+    // Inicializa as partições
+    for (int i = 0; i < num_p; i++) {
+        sprintf(nome, "partition%i.dat", i);
         v[i].f = fopen(nome, "rb");
 
         if (v[i].f != NULL) {
-            //fseek(v[i].f, v[i].aux_p * tamanho(), SEEK_SET);
-            Employee *f = read_employee(v[i].f);
-            if (f == NULL) {
-                //arquivo estava vazio
-                //coloca HIGH VALUE nessa posi??o do vetor
-                v[i].employee = employee(INT_MAX, "", "", 0, 0, 0, 0, 0, 0, 0, 'a');
+            v[i].fun = read_employee(v[i].f);
+            if (v[i].fun == NULL) {
+                v[i].fun = employee(INT_MAX, "", "", 0, 0, 0, 0, 0, 0, 0, 0);
             }
-            else {
-                //conseguiu ler funcionario, coloca na posi??o atual do vetor
-                v[i].employee = f;
-            }
-        }
-        else {
+        } else {
             fim = 1;
         }
-
-        particao++;
     }
 
-
-
-    //int aux = 0;
-
-    while (!(fim)) { //conseguiu abrir todos os arquivos
-
-        // Menor valor encontrado no topo
+    while (!fim) {
         int menor = INT_MAX;
-        // Index da partição que possui o menor valor
-        int pos_menor;
+        int pos_menor = -1;
 
-        // Itera sobre as partições e encontra a com o menor valor no topo
-        for(int i = 0; i < num_p; i++){
-            if(v[i].employee->id < menor){
-                menor = v[i].employee->id;
+        for (int i = 0; i < num_p; i++) {
+            if (v[i].fun != NULL && v[i].fun->id < menor) {
+                menor = v[i].fun->id;
                 pos_menor = i;
             }
         }
-        // Verifica se não possui mais menores valores
-        if (menor == INT_MAX) fim = 1;
-        else {
 
-            // Salva o menor funcionario no arquivo principal
-            save_employee(file, v[pos_menor].employee);
-            // Recupera o funcionairo da menor partição
-            fseek(v[pos_menor].f, ftell(v[pos_menor].f) + get_employee_size(), SEEK_SET);
+        if (pos_menor == -1) {
+            fim = 1; // Acabou o processamento
+        } else {
+            save_employee(out, v[pos_menor].fun);
 
-            Employee *f = read_employee(v[pos_menor].f);
+            free(v[pos_menor].fun); // Libera o funcionário atual
+            v[pos_menor].fun = read_employee(v[pos_menor].f);
 
-            if (f == NULL) {
-                printf("null\n");
-                //arquivo estava vazio
-                //coloca HIGH VALUE nessa posiçao do vetor
-                v[pos_menor].employee = employee(INT_MAX, "", "", 0, 0, 0, 0, 0, 0, 0, 'a');
+            if (v[pos_menor].fun == NULL) {
+                v[pos_menor].fun = employee(INT_MAX, "", "", 0, 0, 0, 0, 0, 0, 0, 0);
             }
-            else {
-                print_employee(v[pos_menor].f);
-                printf(f);
-                v[pos_menor].employee = f;
-            }
-            for (int f = 0; f < 100; f++) printf("passou\n");
-
         }
     }
 
-    //fecha arquivos das partiÇões de entrada
-    for(int i = 0; i < num_p; i++){
-        printf("for 2");
+    // Fecha os arquivos de partição
+    for (int i = 0; i < num_p; i++) {
         fclose(v[i].f);
-    //    free(v[i].func);
+        free(v[i].fun);
     }
-    //fecha arquivo de saída
-    //fclose(out);
 }
-
-

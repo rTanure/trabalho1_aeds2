@@ -7,6 +7,8 @@
 #include <string.h>
 
 #include "employee.h"
+#include "pontos.h"
+#include "pontos.h"
 
 void wait_for_enter() {
     printf("Pressione Enter para continuar...\n");
@@ -47,7 +49,7 @@ void add_employee_menu(FILE *file) {
     employee-> id = get_employees_count(file) + 1;
     employee-> hire_date = time(NULL);
     employee-> resignation_date = 0;
-    employee-> state = 'o';
+    employee-> state = 0;
 
     // Confirma a criação do novo funcionario
     char confirmation;
@@ -85,8 +87,10 @@ void add_random_employee_menu(FILE *file) {
 }
 
 
-void admin_menu(FILE *file) {
+void admin_menu(FILE *file, FILE *file_pontos) {
     unsigned int selection = 0;
+    int id;
+    Employee *e;
 
     do {
         system("cls");
@@ -97,7 +101,10 @@ void admin_menu(FILE *file) {
         printf("4. Verificar se a base funcionarios esta ordenada.\n");
         printf("5. Ordenar por classificacao interna.\n");
         printf("6. Imprimir funcionario em uma posicao.\n");
-        printf("7. imprimir lista de funcionarios.\n");
+        printf("7. Imprimir lista de funcionarios.\n");
+        printf("8. Dias trabalhados de um funcionario.\n");
+        printf("9. Demitir um funcionario\n");
+
 
         printf("\n0. Voltar\n");
         printf("\n>>> Opcao selecionada: ");
@@ -117,7 +124,13 @@ void admin_menu(FILE *file) {
                 break;
             case 4:
                 clear_screen();
-                printf("base ordenada: %d", verify_sorted_employees(file));
+                if(verify_sorted_employees(file)) {
+                    printf(">> A base de funcionarios esta ordenada.\n\n");
+                }
+                else
+                {
+                    printf(">> A base de funcionarios NAO esta ordenada.\n\n");
+                }
                 wait_for_enter();
                 break;
             case 5:
@@ -127,28 +140,115 @@ void admin_menu(FILE *file) {
                 break;
             case 6:
                 clear_screen();
-                int id;
                 Employee *employee;
 
                 printf("> Digite o id do funcionario: ");
                 scanf("%d", &id);
-                employee = get_employee_by_index(file, id);
+                employee = get_employee_by_id(file, id);
 
                 print_employee(employee);
                 wait_for_enter();
                 free(employee);
                 break;
             case 7:
-                Employee *f;
                 rewind(file);
                 for(int i = 0; i < get_employees_count(file); i++) {
                     fseek(file, get_employee_size() * i, SEEK_SET);
-                    f = read_employee(file);
+                    e = read_employee(file);
 
-                    print_employee(f);
+                    print_employee(e);
                     printf("\n==============\n");
                 }
                 wait_for_enter();
+                break;
+            case 8:
+                clear_screen();
+
+                printf("> Digite o id do funcionario: ");
+                scanf("%d", &id);
+                if(id < 0 || id > get_employees_count(file)) break;
+                e = get_employee_by_id(file, id);
+                int count = get_days_worked(file_pontos, id);
+                printf("%s trabalhou por %d dias\n", e->name, count);
+                // free(e);
+                wait_for_enter();
+
+                break;
+            case 9:
+                clear_screen();
+
+                printf("> Digite o id do funcionario: ");
+                scanf("%d", &id);
+
+                e = get_employee_by_id(file, id);
+                if(e == NULL)
+                {
+                    printf("Voce deve informar um id valido.\n");
+                    wait_for_enter();
+                    break;
+                }
+                e->resignation_date = time(NULL);
+                int index = get_employee_index(file, e->id);
+                update_employee(file, e, index);
+
+                clear_screen();
+                printf("%s foi demitido com sucesso!", e->name);
+                wait_for_enter();
+            default:
+                break;
+        }
+    } while(selection != 0);
+}
+
+void menu_ponto(FILE *file, FILE *file_pontos)
+{
+    unsigned int selection = 0;
+
+    do {
+        system("cls");
+        printf("======= PONTO ELETRONICO =======\n");
+        printf("1. Bater ponto.\n");
+        printf("\n0. Sair\n");
+        printf("\n>>> Opcao selecionada: ");
+        scanf("%d", &selection);
+
+        switch (selection) {
+            case 1:
+                clear_screen();
+                Employee *e;
+                int id;
+                printf("> Informe o seu id: ");
+                scanf("%d", &id);
+
+                e = get_employee_by_id(file, id);
+
+                if(e == NULL) {
+                    clear_screen();
+                    printf("Usuario nao encontrado.\n");
+                    wait_for_enter();
+                    break;
+                }
+
+                if(e->resignation_date != 0) {
+                    clear_screen();
+                    printf("Voce foi demitido, nao pode bater ponto.\n");
+                    wait_for_enter();
+                    break;
+                }
+
+                if(e-> state != 3) e->state++;
+                else e->state = 0;
+
+
+                clear_screen();
+                print_employee(e);
+                int index = get_employee_index(file, id);
+                update_employee(file, e, index);
+                baterPonto(file_pontos, e->id, e->state);
+
+                wait_for_enter();
+
+                free(e);
                 break;
             default:
                 break;
@@ -156,7 +256,7 @@ void admin_menu(FILE *file) {
     } while(selection != 0);
 }
 
-void menu(FILE *file) {
+void menu(FILE *file, FILE *file_pontos) {
     unsigned int selection = 0;
 
     do {
@@ -170,11 +270,10 @@ void menu(FILE *file) {
 
         switch (selection) {
             case 1:
-                printf("implementar... \n");
-                wait_for_enter();
+                menu_ponto(file, file_pontos);
                 break;
             case 2:
-                admin_menu(file);
+                admin_menu(file, file_pontos);
                 break;
             default:
                 break;
